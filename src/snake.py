@@ -72,21 +72,25 @@ class Snake:
             
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    self.dirx = -1
-                    self.diry = 0
-                    self.turns[self.head.pos[:]] = [self.dirx,self.diry]
+                    if self.length == 1 or not self.dirx == 1 and self.length > 1:
+                        self.dirx = -1# goes left on x
+                        self.diry = 0
+                        self.turns[self.head.pos[:]] = [self.dirx,self.diry]
                 elif event.key == pygame.K_RIGHT:
-                    self.dirx = 1
-                    self.diry = 0
-                    self.turns[self.head.pos[:]] = [self.dirx,self.diry]
+                    if self.length == 1 or not self.dirx == -1 and self.length > 1:
+                        self.dirx = 1# goes right on x
+                        self.diry = 0
+                        self.turns[self.head.pos[:]] = [self.dirx,self.diry]
                 elif event.key == pygame.K_UP:
-                    self.dirx = 0
-                    self.diry = -1
-                    self.turns[self.head.pos[:]] = [self.dirx,self.diry]
+                    if self.length == 1 or not self.diry == 1 and self.length > 1:
+                        self.dirx = 0
+                        self.diry = -1# goes up on y
+                        self.turns[self.head.pos[:]] = [self.dirx,self.diry]
                 elif event.key == pygame.K_DOWN:
-                    self.dirx = 0
-                    self.diry = 1
-                    self.turns[self.head.pos[:]] = [self.dirx,self.diry]
+                    if self.length == 1 or not self.diry == -1 and self.length > 1:
+                        self.dirx = 0
+                        self.diry = 1# goes down on y
+                        self.turns[self.head.pos[:]] = [self.dirx,self.diry]
                 elif event.key == pygame.K_ESCAPE:
                     self._game.game_end()
         
