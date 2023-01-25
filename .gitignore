@@ -1,0 +1,9 @@
+!/.gitignore
+__pycache__/
+*/__pycache__/
+test*
+config.yml
+.cache
+.vscode
+.vs
+*.idea
