@@ -3,6 +3,7 @@ from __future__ import annotations
 import pygame
 import time
 
+from json import load, dump
 from food import Food
 from snake import Snake
 from enums import GameMode
@@ -36,6 +37,7 @@ class Game:
         self.food: Food = None
         self.delay: float = gamemode.value
         self.max_length: int = 100
+        self.cache: dict = {}
 
         # screen settings
         self.cols: int = 30
@@ -44,11 +46,33 @@ class Game:
         self.cell_height: float = height / self.rows
 
         # startet das spiel
+        self.get_savegame()
         self.main()
 
+    def get_savegame(self) -> None:
+        try:
+            with open('./snake-save.json', 'r') as file:
+                data = load(file)
+                self.cache.update(data)
+        # if the file dose not exists
+        except:
+            pass 
+
+    def update_savegame(self) -> None:
+        with open('./snake-save.json', 'w') as file:
+            dump(
+                self.cache,
+                file,
+                # looks better
+                indent = 4
+            )
+
     def game_end(self) -> None:
+        if self.cache.get('highscore', 0) < self.snake.length:
+            self.cache['highscore'] = self.snake.length
+            self.update_savegame()
         screen.fill(BLACK)
-        score = font.render(f'Score: {self.snake.length}', 1, WHITE)
+        score = font.render(f"Score: {self.snake.length} | Highscore: {self.cache.get('highscore', self.snake.length)}", 1, WHITE)
         screen.blit(score, (10, 10))
         pygame.display.flip()
         time.sleep(1.5)
