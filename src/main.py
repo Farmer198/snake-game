@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pygame
 import time
+import math
 
 from json import load, dump
 from food import Food
@@ -13,8 +14,8 @@ pygame.init()
 
 
 # Screen Information
-width = 600 
-height = 600
+width = 1000
+height = 1000
 
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption('simplesnakegame')
@@ -38,11 +39,12 @@ class Game:
         self.food: Food = None
         self.delay: float = gamemode.value
         self.max_length: int = 100
+        self.show_fps: bool = True
         self.cache: dict = {}
 
         # screen settings
-        self.cols: int = 30
-        self.rows: int = 30
+        self.cols: int = 60
+        self.rows: int = 60
         self.cell_width: float = width / self.cols
         self.cell_height: float = height / self.rows
 
@@ -92,15 +94,22 @@ class Game:
         self.snake = Snake(RED, (10, 10), self)
 
     def check_game_over(self) -> None:
-        if self.snake.head.pos[0] >= 30 or self.snake.head.pos[0] < 0 or self.snake.head.pos[1] >= 30 or self.snake.head.pos[1] < 0:
+        if self.snake.head.pos[0] >= self.rows or self.snake.head.pos[0] < 0 or self.snake.head.pos[1] >= self.cols or self.snake.head.pos[1] < 0:
             self.game_end()
+            return
 
         for i in range(self.snake.length):
             if self.snake.body[i].pos in list(map(lambda z: z.pos, self.snake.body[i+1:])):
                 self.game_end()
+                break
 
         if self.snake.length >= self.max_length:
             self.game_end()
+            return
+
+    def draw_fps(self, screen):
+        score = font.render(f"FPS: {math.ceil(clock.get_fps())}", 1, WHITE)
+        screen.blit(score, (30, 30))
 
     def main(self) -> None:
         stopped = False
@@ -110,6 +119,7 @@ class Game:
         self.place_food()
 
         while not stopped:
+            clock.tick(30)
             self.snake.move()
 
             if self.snake.body[0].pos == self.food.pos:
@@ -128,9 +138,11 @@ class Game:
             # snake body
             self.snake.draw(screen)
 
+            if self.show_fps:
+                self.draw_fps(screen)
+
             # updates the screen
             pygame.display.flip()
-
             time.sleep(self.delay)
 
 if __name__ == '__main__':
