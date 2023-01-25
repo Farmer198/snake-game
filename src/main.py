@@ -6,6 +6,7 @@ import time
 from json import load, dump
 from food import Food
 from snake import Snake
+from cube import Cube
 from enums import GameMode
 
 pygame.init()
@@ -81,6 +82,12 @@ class Game:
     def place_food(self) -> None:
         self.food = Food(self)
 
+        def get_pos(cube: Cube):
+            return cube.pos
+
+        while self.food.pos in list(map(get_pos, self.snake.body)):
+            self.food = Food(self)
+
     def create_snake(self) -> None:
         self.snake = Snake(RED, (10, 10), self)
 
@@ -106,7 +113,8 @@ class Game:
             self.snake.move()
 
             if self.snake.body[0].pos == self.food.pos:
-                self.snake.add_cupe()
+                for i in range(self.food.quality):
+                    self.snake.add_cupe()
                 self.place_food()
 
             # checks the snake
