@@ -4,27 +4,23 @@ import pygame
 import time
 import math
 
+from pygame import Surface
+from pygame.font import Font
+from pygame.time import Clock
+from typing import Optional
 from json import load, dump
 from food import Food
 from snake import Snake
 from cube import Cube
-from enums import GameMode
+from enums import GameMode, Colors
 
 pygame.init()
-
 
 # Screen Information
 width = 1000
 height = 1000
 
-screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption('simplesnakegame')
-font = pygame.font.SysFont('Roboto', 60)
-
-GREEN = (0, 225, 0)
-WHITE = (225, 225, 225)
-RED = (225, 0, 0)
-BLACK = (0, 0, 0)
 
 # Clock
 clock = pygame.time.Clock()
@@ -33,14 +29,23 @@ __all__ = (
     'Game'
 )
 
+
 class Game:
-    def __init__(self, gamemode: GameMode) -> None:
-        self.snake: Snake = None
-        self.food: Food = None
-        self.delay: float = gamemode.value
+    def __init__(self, game_mode: GameMode, game_surface: Surface, game_font: Font, game_clock: Clock) -> None:
+        self.snake: Optional[Snake] = None
+        self.food: Optional[Food] = None
+        self.cache: dict = {}
+        self.stopped: bool = False
+
+        # pygame stuff
+        self.surface: Surface = game_surface
+        self.font: Font = game_font
+        self.clock: Clock = game_clock
+
+        # game settings
+        self.delay: float = game_mode.value
         self.max_length: int = 100
         self.show_fps: bool = True
-        self.cache: dict = {}
 
         # screen settings
         self.cols: int = 60
@@ -48,7 +53,8 @@ class Game:
         self.cell_width: float = width / self.cols
         self.cell_height: float = height / self.rows
 
-        # startet das spiel
+    def run(self) -> None:
+        # starts the game
         self.get_savegame()
         self.main()
 
@@ -58,8 +64,8 @@ class Game:
                 data = load(file)
                 self.cache.update(data)
         # if the file dose not exists
-        except:
-            pass 
+        except Exception as exc:
+            pass
 
     def update_savegame(self) -> None:
         with open('./snake-save.json', 'w') as file:
@@ -67,16 +73,18 @@ class Game:
                 self.cache,
                 file,
                 # looks better
-                indent = 4
+                indent=4
             )
 
     def game_end(self) -> None:
         if self.cache.get('highscore', 0) < self.snake.length:
             self.cache['highscore'] = self.snake.length
             self.update_savegame()
-        screen.fill(BLACK)
-        score = font.render(f"Score: {self.snake.length} | Highscore: {self.cache.get('highscore', self.snake.length)}", 1, WHITE)
-        screen.blit(score, (10, 10))
+        self.surface.fill(Colors.Black.value)
+        score = self.font.render(
+            f"Score: {self.snake.length} | High-score: {self.cache.get('highscore', self.snake.length)}", True,
+            Colors.White.value)
+        self.surface.blit(score, (10, 10))
         pygame.display.flip()
         time.sleep(1.5)
         self.snake.reset((10, 10))
@@ -91,15 +99,16 @@ class Game:
             self.food = Food(self)
 
     def create_snake(self) -> None:
-        self.snake = Snake(RED, (10, 10), self)
+        self.snake = Snake(Colors.Pink, (10, 10), self)
 
     def check_game_over(self) -> None:
-        if self.snake.head.pos[0] >= self.rows or self.snake.head.pos[0] < 0 or self.snake.head.pos[1] >= self.cols or self.snake.head.pos[1] < 0:
+        if self.snake.head.pos[0] >= self.rows or self.snake.head.pos[0] < 0 or self.snake.head.pos[1] >= self.cols or \
+                self.snake.head.pos[1] < 0:
             self.game_end()
             return
 
         for i in range(self.snake.length):
-            if self.snake.body[i].pos in list(map(lambda z: z.pos, self.snake.body[i+1:])):
+            if self.snake.body[i].pos in list(map(lambda z: z.pos, self.snake.body[i + 1:])):
                 self.game_end()
                 break
 
@@ -107,43 +116,53 @@ class Game:
             self.game_end()
             return
 
-    def draw_fps(self, screen):
-        score = font.render(f"FPS: {math.ceil(clock.get_fps())}", 1, WHITE)
-        screen.blit(score, (30, 30))
+    def draw_fps(self, color: Colors = Colors.White) -> None:
+        score = self.font.render(f"FPS: {math.ceil(self.clock.get_fps())}", True, color.value)
+        self.surface.blit(score, (30, 30))
 
     def main(self) -> None:
-        stopped = False
 
         # creates the snake
         self.create_snake()
         self.place_food()
 
-        while not stopped:
-            clock.tick(30)
+        while not self.stopped:
+            self.clock.tick(30)
             self.snake.move()
 
             if self.snake.body[0].pos == self.food.pos:
                 for i in range(self.food.quality):
-                    self.snake.add_cupe()
+                    self.snake.add_cube()
                 self.place_food()
 
             # checks the snake
             self.check_game_over()
 
-            screen.fill(BLACK)
+            self.surface.fill(Colors.Black.value)
 
-            # placec the food
-            self.food.draw(screen)
+            # places the food
+            self.food.draw()
 
             # snake body
-            self.snake.draw(screen)
+            self.snake.draw()
 
             if self.show_fps:
-                self.draw_fps(screen)
+                self.draw_fps()
 
             # updates the screen
             pygame.display.flip()
             time.sleep(self.delay)
 
+
 if __name__ == '__main__':
-    Game(GameMode.Hard)
+    game_mode = GameMode.Hard
+    game_surface = pygame.display.set_mode((width, height))
+    game_font = pygame.font.SysFont('Roboto', 60)
+    game_clock = Clock()
+    game = Game(
+        game_mode,
+        game_surface,
+        game_font,
+        game_clock
+    )
+    game.run()

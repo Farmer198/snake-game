@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import pygame
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Tuple
 from cube import Cube
+from enums import Colors
 
 __all__ = (
     'Snake'
@@ -10,60 +11,64 @@ __all__ = (
 
 if TYPE_CHECKING:
     from main import Game
+    from pygame import Surface
 
 class Snake:
     """
-    The Snake
+    Represents the Snake.
     """
     __slots__ = (
         'body',
         'turns',
         'head',
-        'dirx',
-        'diry',
-        '_game',
-        'color'
+        'change_x',
+        'change_y',
+        'color',
+        '_game'
     )
 
-    def __init__(self, color: List, pos: List, game: Game) -> None:
+    def __init__(self, color: Colors, pos: Tuple, game: Game) -> None:
         self.body: List[Cube] = []
         self.turns: dict = {}
         self._game = game
+        self.color: Colors = color
 
-        self.color = color
         self.head: Cube = Cube(pos, game = game, color = color)
         self.body.append(self.head)
-        self.dirx = 0
-        self.diry = 1
+        self.change_x = 0
+        self.change_y = 1
 
     @property
     def length(self) -> int:
         return len(self.body)
 
-    def add_cupe(self) -> None:
+    def add_cube(self) -> None:
+        """Adds a cube to the Snake."""
         tail = self.body[-1]
-        dx, dy = tail.dirx, tail.diry
+        dx, dy = tail.change_x, tail.change_y
 
         if dx == 1 and dy == 0:
             self.body.append(Cube((tail.pos[0]-1, tail.pos[1]), self._game))
         elif dx == -1 and dy == 0:
-            self.body.append(Cube((tail.pos[0]+1,tail.pos[1]), self._game))
+            self.body.append(Cube((tail.pos[0]+1, tail.pos[1]), self._game))
         elif dx == 0 and dy == 1:
-            self.body.append(Cube((tail.pos[0],tail.pos[1]-1), self._game))
+            self.body.append(Cube((tail.pos[0], tail.pos[1]-1), self._game))
         elif dx == 0 and dy == -1:
-            self.body.append(Cube((tail.pos[0],tail.pos[1]+1), self._game))
+            self.body.append(Cube((tail.pos[0], tail.pos[1]+1), self._game))
 
-        self.body[-1].dirx = dx
-        self.body[-1].diry = dy
+        self.body[-1].change_x = dx
+        self.body[-1].change_y = dy
 
     def remove_cube(self) -> None:
+        """Removes a cube from the Snake."""
         # removes the last body part
         if self.body:
             self.body.pop()
 
-    def draw(self, screen) -> None:
+    def draw(self) -> None:
+        """Draws all cubes from the Snake."""
         for i in self.body:
-            i.draw(screen)
+            i.draw()
 
     def move(self) -> None:
         for event in pygame.event.get():
@@ -72,25 +77,25 @@ class Snake:
             
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    if self.length == 1 or not self.dirx == 1 and self.length > 1:
-                        self.dirx = -1# goes left on x
-                        self.diry = 0
-                        self.turns[self.head.pos[:]] = [self.dirx,self.diry]
+                    if self.length == 1 or not self.change_x == 1 and self.length > 1:
+                        self.change_x = -1# goes left on x
+                        self.change_y = 0
+                        self.turns[self.head.pos[:]] = [self.change_x, self.change_y]
                 elif event.key == pygame.K_RIGHT:
-                    if self.length == 1 or not self.dirx == -1 and self.length > 1:
-                        self.dirx = 1# goes right on x
-                        self.diry = 0
-                        self.turns[self.head.pos[:]] = [self.dirx,self.diry]
+                    if self.length == 1 or not self.change_x == -1 and self.length > 1:
+                        self.change_x = 1# goes right on x
+                        self.change_y = 0
+                        self.turns[self.head.pos[:]] = [self.change_x, self.change_y]
                 elif event.key == pygame.K_UP:
-                    if self.length == 1 or not self.diry == 1 and self.length > 1:
-                        self.dirx = 0
-                        self.diry = -1# goes up on y
-                        self.turns[self.head.pos[:]] = [self.dirx,self.diry]
+                    if self.length == 1 or not self.change_y == 1 and self.length > 1:
+                        self.change_x = 0
+                        self.change_y = -1# goes up on y
+                        self.turns[self.head.pos[:]] = [self.change_x, self.change_y]
                 elif event.key == pygame.K_DOWN:
-                    if self.length == 1 or not self.diry == -1 and self.length > 1:
-                        self.dirx = 0
-                        self.diry = 1# goes down on y
-                        self.turns[self.head.pos[:]] = [self.dirx,self.diry]
+                    if self.length == 1 or not self.change_y == -1 and self.length > 1:
+                        self.change_x = 0
+                        self.change_y = 1# goes down on y
+                        self.turns[self.head.pos[:]] = [self.change_x, self.change_y]
                 elif event.key == pygame.K_ESCAPE:
                     self._game.game_end()
         
@@ -102,12 +107,13 @@ class Snake:
                 if num == self.length-1:
                     self.turns.pop(p)
             else:
-                cube.move(cube.dirx,cube.diry)
+                cube.move(cube.change_x, cube.change_y)
 
-    def reset(self, pos):
+    def reset(self, pos: Tuple) -> None:
+        """Resets the Snake."""
         self.body.clear()
         self.turns.clear()
         self.head = Cube(pos, game = self._game, color = self.color)
         self.body.append(self.head)
-        self.dirx = 0
-        self.diry = 1
+        self.change_x = 0
+        self.change_y = 1
