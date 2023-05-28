@@ -62,8 +62,7 @@ class Cube:
         change_y: :class:`int`
             The Change for y position.
         """
-        self.change_x = change_x
-        self.change_y = change_y
+        self.change_x, self.change_y = change_x, change_y
         # changes the position with the change parameters
         self.pos = (self.pos[0] + self.change_x, self.pos[1] + self.change_y)
 
@@ -72,8 +71,7 @@ class Cube:
         Draws the cube to PyGame.
 
         """
-        x = self.pos[0]
-        y = self.pos[1]
+        x, y = self.pos
         width = self._game.cell_width
         height = self._game.cell_height
 
