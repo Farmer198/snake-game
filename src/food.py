@@ -31,11 +31,11 @@ class Food(Cube):
         super().__init__((0, 0), game, change_x, change_y, color)
 
         # the quality of the food
-        self.quality = randint(1, 2)
+        r = randint(1, 100)
+        self.quality = 2 if r < 10 else 1
         if self.quality >= 2:
             self.color = Colors.Gold
 
         # the random position for the food
-        x = randint(1, self._game.cols - 2)
-        y = randint(1, self._game.rows - 2)
+        x, y = randint(1, self._game.cols - 2), randint(1, self._game.rows - 2)
         self.pos = (x, y)
